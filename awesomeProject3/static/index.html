@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD User Management</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    const apiUrl = "http://localhost:8080/users";
+
+    // Получение списка пользователей
+    async function fetchUsers() {
+      const response = await fetch(apiUrl);
+      const users = await response.json();
+      const userTableBody = document.getElementById("user-table-body");
+      userTableBody.innerHTML = "";
+      users.forEach(user => {
+        const row = `
+                    <tr>
+                        <td>${user.ID}</td>
+                        <td>${user.Name}</td>
+                        <td>${user.Email}</td>
+                        <td>
+                            <button onclick="editUser(${user.ID}, '${user.Name}', '${user.Email}')">Edit</button>
+                            <button onclick="deleteUser(${user.ID})">Delete</button>
+                        </td>
+                    </tr>`;
+        userTableBody.innerHTML += row;
+      });
+    }
+
+    // Создание пользователя
+    async function createUser(event) {
+      event.preventDefault();
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Name: name, Email: email }),
+      });
+
+      if (response.ok) {
+        alert("User created successfully");
+        fetchUsers();
+        document.getElementById("user-form").reset();
+      } else {
+        alert("Error creating user");
+      }
+    }
+
+    // Редактирование пользователя
+    async function editUser(id, name, email) {
+      document.getElementById("name").value = name;
+      document.getElementById("email").value = email;
+      document.getElementById("user-id").value = id;
+      document.getElementById("submit-btn").textContent = "Update User";
+    }
+
+    // Обновление пользователя
+    async function updateUser(event) {
+      event.preventDefault();
+      const id = document.getElementById("user-id").value;
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+
+      const response = await fetch(apiUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ID: parseInt(id), Name: name, Email: email }),
+      });
+
+      if (response.ok) {
+        alert("User updated successfully");
+        fetchUsers();
+        document.getElementById("user-form").reset();
+        document.getElementById("submit-btn").textContent = "Create User";
+      } else {
+        alert("Error updating user");
+      }
+    }
+
+    // Удаление пользователя
+    async function deleteUser(id) {
+      const response = await fetch(apiUrl, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ID: id }),
+      });
+
+      if (response.ok) {
+        alert("User deleted successfully");
+        fetchUsers();
+      } else {
+        alert("Error deleting user");
+      }
+    }
+
+    // Обработка формы
+    function handleSubmit(event) {
+      const isUpdate = document.getElementById("submit-btn").textContent === "Update User";
+      if (isUpdate) {
+        updateUser(event);
+      } else {
+        createUser(event);
+      }
+    }
+
+    // Загрузка данных при старте
+    window.onload = fetchUsers;
+  </script>
+</head>
+<body>
+<header>
+  <h1>CRUD User Management</h1>
+</header>
+<main>
+  <section class="form-section">
+    <h2>Create or Update User</h2>
+    <form id="user-form" onsubmit="handleSubmit(event)">
+      <input type="hidden" id="user-id">
+      <label for="name">Name:</label>
+      <input type="text" id="name" placeholder="Enter name" required>
+      <label for="email">Email:</label>
+      <input type="email" id="email" placeholder="Enter email" required>
+      <button id="submit-btn" type="submit">Create User</button>
+    </form>
+  </section>
+
+  <section class="table-section">
+    <h2>User List</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody id="user-table-body"></tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>
